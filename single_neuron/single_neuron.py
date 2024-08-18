@@ -1,18 +1,15 @@
 import math
 import random
 import matplotlib.pyplot as plt
+import time
 
 # Test with y = -3.5x + 7
 truth_m = 5 * random.random() - 2.5
 truth_b = 20 * random.random() - 10
-# truth_m = -5
-# truth_b = -10
 
 
 def true_function(x):
     return truth_m * x + truth_b
-    # return -3.5 * x + 7
-
 
 # Values will be +/- 2 within the target function
 variation_range = 20
@@ -49,12 +46,11 @@ def mean_squared_error(reference_y, predictions_y):
 
     # Cost function is (sum(d_i - p_i) ** 2) / (dataset_size)
     for i in range(dataset_size):
-        error = predictions_y[i] - reference_y[i]
+        error = reference_y[i] - predictions_y[i]
         squared_error = math.pow(error, 2)
         sum_of_squared_errors += squared_error
 
     return sum_of_squared_errors / len(dataset_y)
-
 
 plt.ion()
 fig = plt.figure()
@@ -63,8 +59,10 @@ plot_dataset_points = ax.scatter(dataset_x, dataset_y, s=1)
 plot_model, = ax.plot([domain_start, domain_end], [
     neuron_m * domain_start + neuron_b, neuron_m * domain_end + neuron_b], color="red")
 
-train_iterations = 50
+train_iterations = 20
 for train_iteration in range(train_iterations):
+    train_start = time.time()
+
     # Do one forward pass on all the values
     forward_pass_y = []
     for test_x in dataset_x:
@@ -120,11 +118,13 @@ for train_iteration in range(train_iterations):
     dldb = (dldb/dataset_size) + dldb_momentum
     dldb_momentum = dldb
 
-    print(f"forward pass {train_iteration:3} error: {forward_pass_error:.3f}, dldm: {dldm:.2f}, dldm_momentum: {dldm_momentum:.2f}, dldb: {dldb:.2f}, dldb_momentum: {dldb_momentum:.2f}")
-
     # update parameters
     neuron_m = learning_rate_m * (-1 * dldm) + neuron_m
     neuron_b = learning_rate_b * (-1 * dldb) + neuron_b
+
+    train_end = time.time()
+    training_time_ms = (train_end - train_start) * 1000
+    print(f"forward pass {train_iteration:3} error: {forward_pass_error:.3f}, time: {training_time_ms:.2f}ms")
 
     # Show the input and model
     plot_model.set_ydata([neuron_m * domain_start + neuron_b,
