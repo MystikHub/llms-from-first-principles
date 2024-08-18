@@ -74,10 +74,10 @@ for train_iteration in range(train_iterations):
 
     # Do the backward pass
     # d(cost)/dm
-    dldm = 0
-    dldm_momentum = 0
-    dldb = 0
-    dldb_momentum = 0
+    dcdm = 0
+    dcdm_momentum = 0
+    dcdb = 0
+    dcdb_momentum = 0
     for i in range(dataset_size):
         prediction = forward_pass_y[i]
         truth = dataset_y[i]
@@ -86,41 +86,41 @@ for train_iteration in range(train_iterations):
         m = neuron_m
         b = neuron_b
 
-        # loss = ((m * x + b) - truth) ** 2
+        # cost = ((m * x + b) - truth) ** 2
 
-        # Slope of m wrt L is
+        # Slope of m wrt C is
         # b should not change
         # x should not change
         # We're only looking to change m
-        # i.e. How does m change the loss when x and b are the same?
+        # i.e. How does m change the cost when x and b are the same?
         #
-        # find dl/dm for l(g(m)^2)
-        # dl/dm = dl/dg * dg/dm
+        # find dc/dm for c(g(m)^2)
+        # dc/dm = dc/dg * dg/dm
         # g(m) = (mx + b - truth)
         # dg/dm = x
-        # dl/dg = 2 * g(m)
-        # Since l(pred, truth) is quadratic, dl/dm will be a linear function
-        # dl/dm = 2 * (mx + b - truth) * x
-        # For training, the slope of dl/dm needs to be sampled
-        dldm_func = lambda m: 2 * (m * x + b - truth) * x
-        dldm_here = dldm_func(neuron_m)
+        # dc/dg = 2 * g(m)
+        # Since c(pred, truth) is quadratic, dc/dm will be a linear function
+        # dc/dm = 2 * (mx + b - truth) * x
+        # For training, the slope of dc/dm needs to be sampled
+        dcdm_func = lambda m: 2 * (m * x + b - truth) * x
+        dcdm_here = dcdm_func(neuron_m)
 
-        # dldm += dldm_here
-        dldm += dldm_here
+        # dcdm += dcdm_here
+        dcdm += dcdm_here
 
-        dldb_func = lambda b: 2 * (m * x + b - truth) * 1
-        dldb_here = dldb_func(neuron_b)
+        dcdb_func = lambda b: 2 * (m * x + b - truth) * 1
+        dcdb_here = dcdb_func(neuron_b)
 
-        dldb += dldb_here
+        dcdb += dcdb_here
 
-    dldm = (dldm / dataset_size) + dldm_momentum
-    dldm_momentum = dldm
-    dldb = (dldb/dataset_size) + dldb_momentum
-    dldb_momentum = dldb
+    dcdm = (dcdm / dataset_size) + dcdm_momentum
+    dcdm_momentum = dcdm
+    dcdb = (dcdb/dataset_size) + dcdb_momentum
+    dcdb_momentum = dcdb
 
     # update parameters
-    neuron_m = learning_rate_m * (-1 * dldm) + neuron_m
-    neuron_b = learning_rate_b * (-1 * dldb) + neuron_b
+    neuron_m = learning_rate_m * (-1 * dcdm) + neuron_m
+    neuron_b = learning_rate_b * (-1 * dcdb) + neuron_b
 
     train_end = time.time()
     training_time_ms = (train_end - train_start) * 1000
@@ -134,10 +134,7 @@ for train_iteration in range(train_iterations):
     plt.ylabel('Output')  # Label for y-axis
     plt.title(
         f'Dataset: {truth_m:.3f}x + {truth_b:.3f}\nModel: y = {neuron_m:.3f}x + {neuron_b:.3f}')
-    # plt.show()
-    # plt.draw()
-    # plt.pause(0.001)
-    # plt.clf()
+
     fig.canvas.draw()
     fig.canvas.flush_events()
 
