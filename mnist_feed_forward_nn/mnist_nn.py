@@ -1,12 +1,12 @@
+import math
 import random
 from datasets import load_dataset
 
 ds = load_dataset("ylecun/mnist")
-dataset_size = ds['train'].shape[0]
-grayscale_max = 256
+grayscale_max = 255
 
 hidden_layer_size = 8
-hidden_layer_count = 8
+hidden_layer_count = 4
 output_size = 10 # One output for each class (handwritten digit)
 
 image_width = 28
@@ -57,32 +57,47 @@ for i in range(hidden_layer_count - 2):
     network.append(hidden_layer(hidden_layer_size, hidden_layer_size))
 network.append(hidden_layer(hidden_layer_size, output_size))
 
-# Squared error
-def cost_function_single(prediction, expected):
-    return (prediction - expected) ** 2
+# Cross entropy loss
+def cost_function(prediction: list, expected: list):
+    # Both inputs must have the same number of classes
+    if len(prediction) != len(expected):
+        raise ValueError(f"The classes in the prediction ({len(prediction)}) does not match with the expected values ({len(expected)})!")
 
-def cost_function_multiple(prediction: list, expected: list):
+    # Cross entropy loss between two distributions of discrete random variables
+    # Based on the information from https://en.wikipedia.org/wiki/Cross-entropy
     total = 0
-    for i in range(dataset_size):
-        total += cost_function_single(prediction[i], expected[i])
+    for class_index in range(len(prediction)):
+        total += prediction[class_index] * math.log2(expected[class_index])
+    return total * -1
 
 training_iterations = 1000
 def train():
-    image_index = 0
-    # Do a forward pass
-    # Get the network inputs from the image
-    network_inputs = list(ds['train'][image_index]['image'].getdata())
-    # Normalise the input values
-    for index, pixel_value in enumerate(network_inputs):
-        network_inputs[index] = pixel_value / grayscale_max
+    
+    total_loss = 0
+    dataset_subset_size = min(1000, ds['train'].num_rows)
+    for dataset_image_index in range(dataset_subset_size):
+        dataset_image = ds['train'][dataset_image_index]
 
-    network_outputs = network_inputs
-    for network_layer in network:
-        network_outputs = network_layer.forward(network_outputs)
+        # Do a forward pass
+        # Get the network inputs from the image
+        network_inputs = list(dataset_image['image'].getdata())
 
-    print("Forward pass complete")
-    for index, value in enumerate(network_outputs):
-        print(f"Output {index} value: {value}")
+        # Normalise the input values
+        for index, pixel_value in enumerate(network_inputs):
+            network_inputs[index] = pixel_value / grayscale_max
+
+        network_outputs = network_inputs
+        for network_layer in network:
+            network_outputs = network_layer.forward(network_outputs)
+
+        # Create a list for the prediction class distribution
+        # Cross entropy loss uses the log function, so we can't use zero
+        prediction = [1e-10] * 10
+        prediction[dataset_image['label']] = 1
+        total_loss += cost_function(network_outputs, prediction)
+    
+    average_loss = total_loss / dataset_subset_size
+    print(f"Average cross-entropy loss = {average_loss:.3f}")
 
     # Do the backward pass
 
