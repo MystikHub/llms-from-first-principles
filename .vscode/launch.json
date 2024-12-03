@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "MNIST Neural Network",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "mnist_feed_forward_nn/mnist_nn.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}

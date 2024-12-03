@@ -11,6 +11,7 @@ truth_b = 20 * random.random() - 10
 def true_function(x):
     return truth_m * x + truth_b
 
+
 # Values will be +/- 2 within the target function
 variation_range = 20
 # Use test values between -50 and + 50
@@ -41,7 +42,9 @@ for x in range(dataset_size):
 neuron_m = random.random() * 20 - 10
 neuron_b = random.random() * 20 - 10
 
+
 def mean_squared_error(reference_y, predictions_y):
+    "Calculates the mean squared error between two lists"
     sum_of_squared_errors = 0
 
     # Cost function is (sum(d_i - p_i) ** 2) / (dataset_size)
@@ -52,12 +55,14 @@ def mean_squared_error(reference_y, predictions_y):
 
     return sum_of_squared_errors / len(dataset_y)
 
+
 plt.ion()
 fig = plt.figure()
 ax = fig.add_subplot(111)
 plot_dataset_points = ax.scatter(dataset_x, dataset_y, s=1)
-plot_model, = ax.plot([domain_start, domain_end], [
-    neuron_m * domain_start + neuron_b, neuron_m * domain_end + neuron_b], color="red")
+(plot_model,) = ax.plot(
+    [domain_start, domain_end], [neuron_m * domain_start + neuron_b, neuron_m * domain_end + neuron_b], color="red"
+)
 
 train_iterations = 20
 for train_iteration in range(train_iterations):
@@ -101,13 +106,13 @@ for train_iteration in range(train_iterations):
         # dc/dg = 2 * g(m)
         # Since c(pred, truth) is quadratic, dc/dm will be a linear function
         # dc/dm = 2 * (mx + b - truth) * x
-        # For training, the slope of dc/dm needs to be sampled
         dcdm_func = lambda m: 2 * (m * x + b - truth) * x
+        # For training, the slope of dc/dm needs to be sampled
         dcdm_here = dcdm_func(neuron_m)
 
-        # dcdm += dcdm_here
         dcdm += dcdm_here
 
+        # Repeat for the y-intercept
         dcdb_func = lambda b: 2 * (m * x + b - truth) * 1
         dcdb_here = dcdb_func(neuron_b)
 
@@ -115,7 +120,7 @@ for train_iteration in range(train_iterations):
 
     dcdm = (dcdm / dataset_size) + dcdm_momentum
     dcdm_momentum = dcdm
-    dcdb = (dcdb/dataset_size) + dcdb_momentum
+    dcdb = (dcdb / dataset_size) + dcdb_momentum
     dcdb_momentum = dcdb
 
     # update parameters
@@ -127,13 +132,11 @@ for train_iteration in range(train_iterations):
     print(f"forward pass {train_iteration:3} error: {forward_pass_error:.3f}, time: {training_time_ms:.2f}ms")
 
     # Show the input and model
-    plot_model.set_ydata([neuron_m * domain_start + neuron_b,
-                         neuron_m * domain_end + neuron_b])
+    plot_model.set_ydata([neuron_m * domain_start + neuron_b, neuron_m * domain_end + neuron_b])
 
-    plt.xlabel('Input')  # Label for x-axis
-    plt.ylabel('Output')  # Label for y-axis
-    plt.title(
-        f'Dataset: {truth_m:.3f}x + {truth_b:.3f}\nModel: y = {neuron_m:.3f}x + {neuron_b:.3f}')
+    plt.xlabel("Input")  # Label for x-axis
+    plt.ylabel("Output")  # Label for y-axis
+    plt.title(f"Dataset: {truth_m:.3f}x + {truth_b:.3f}\nModel: y = {neuron_m:.3f}x + {neuron_b:.3f}")
 
     fig.canvas.draw()
     fig.canvas.flush_events()
